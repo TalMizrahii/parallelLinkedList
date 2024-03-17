@@ -73,37 +73,31 @@ void sorted_insert(node_t *head, int val) {
     omp_unset_lock(prev->lock);
 }
 
-
 void remove_val(node_t *head, int val) {
-    if(!head)
-        return;
-    /* Signal start of search */
-    omp_set_lock(head->lock);
-
-    /* Find the right place to delete */
-    node_t *ptr = head->next;
     node_t *prev = head;
+    omp_set_lock(prev->lock);
+    node_t *ptr = head->next;
 
     while (ptr != NULL && ptr->value != val) {
         omp_set_lock(ptr->lock);
+        if (ptr->value == val) {
+            prev->next = ptr->next;
+            #pragma omp atomic
+            head->listSize--;
+            omp_unset_lock(ptr->lock);
+            omp_destroy_lock(ptr->lock);
+            free(ptr->lock);
+            ptr->lock = NULL;
+            free(ptr);
+            ptr = NULL;
+            break;
+        }
         omp_unset_lock(prev->lock);
         prev = ptr;
         ptr = ptr->next;
     }
-    if (ptr == NULL) {
-        omp_unset_lock(prev->lock);
-        return;
-    }
-
-    /* Delete the node */
-    prev->next = ptr->next;
-    #pragma omp atomic
-    head->listSize--;
-    omp_destroy_lock(ptr->lock);
-    free(ptr);
     omp_unset_lock(prev->lock);
 }
-
 
 /**
  * Find the given value in the linked list.
@@ -135,18 +129,18 @@ int find_val(node_t *head, int val) {
  * @return The length of the linked list as int.
  */
 int get_len(node_t *head) {
-//    int length = 0;
-//    node_t *current = head->next;
-//
-//    // Traverse the linked list and count the nodes
-//    while (current != NULL) {
-//        #pragma omp atomic
-//        length++; // increment length atomically to ensure thread safety
-//
-//        current = current->next;
-//    }
-//    return length;
-    return head->listSize;
+    int length = 0;
+    node_t *current = head->next;
+
+    // Traverse the linked list and count the nodes
+    while (current != NULL) {
+        #pragma omp atomic
+        length++; // increment length atomically to ensure thread safety
+
+        current = current->next;
+    }
+    return length;
+//    return head->listSize;
 }
 
 /**
