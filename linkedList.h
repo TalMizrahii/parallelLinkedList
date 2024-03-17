@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
+#include <limits.h>
 #include "omp.h"
 
 typedef struct node_s {

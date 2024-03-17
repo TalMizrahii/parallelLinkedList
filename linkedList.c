@@ -6,10 +6,18 @@
  */
 node_t *init_list(void) {
     node_t *head = malloc(sizeof(node_t));
+    if(!head){
+        printf("Error allocating memory for head\n");
+        exit(1);
+    }
     head->next = NULL;
     head->value = INT_MIN;
     head->lock = malloc(sizeof(omp_lock_t));
-    head->listSize = 1;
+    if(!head->lock){
+        printf("Error allocating memory for lock\n");
+        exit(1);
+    }
+    head->listSize = 0;
     omp_init_lock(head->lock);
     return head;
 }
@@ -21,7 +29,9 @@ node_t *init_list(void) {
  * @param val
  */
 void sorted_insert(node_t *head, int val) {
-    /* Find the right place to insert */
+    if(!head)
+        return;
+
     node_t *ptr = head->next;
     node_t *prev = head;
 
@@ -43,52 +53,57 @@ void sorted_insert(node_t *head, int val) {
             ptr = ptr->next;
         }
     }
-    printf("Inserting %d\n", val);
     /* Insert the new node */
     node_t *new_node = malloc(sizeof(node_t));
+    if(!new_node){
+        printf("Error allocating memory for new_node\n");
+        exit(1);
+    }
     new_node->value = val;
     new_node->next = ptr;
     new_node->lock = malloc(sizeof(omp_lock_t));
+    if(!new_node->lock){
+        printf("Error allocating memory for new_node->lock\n");
+        exit(1);
+    }
     omp_init_lock(new_node->lock);
     prev->next = new_node;
-    omp_set_lock(head->lock);
-#pragma omp atomic
-    ++head->listSize;
-    omp_unset_lock(head->lock);
+    #pragma omp atomic
+    head->listSize++;
     omp_unset_lock(prev->lock);
 }
 
+
 void remove_val(node_t *head, int val) {
-    // Find the right place to insert.
+    if(!head)
+        return;
+    /* Signal start of search */
+    omp_set_lock(head->lock);
+
+    /* Find the right place to delete */
     node_t *ptr = head->next;
     node_t *prev = head;
 
     while (ptr != NULL && ptr->value != val) {
+        omp_set_lock(ptr->lock);
+        omp_unset_lock(prev->lock);
         prev = ptr;
         ptr = ptr->next;
     }
-    // If the value is not in the list.
     if (ptr == NULL) {
+        omp_unset_lock(prev->lock);
         return;
     }
-    // Lock the element that may be modified.
-    omp_set_lock(prev->lock);
-    // Modify the previous node to point to the next node.
+
+    /* Delete the node */
     prev->next = ptr->next;
-    // Free the memory of the removed node.
+    #pragma omp atomic
+    head->listSize--;
     omp_destroy_lock(ptr->lock);
-    free(ptr->lock);
-    ptr->lock = NULL;
     free(ptr);
-    ptr = NULL;
-    // Decrease the list size.
-    omp_set_lock(head->lock);
-#pragma omp atomic
-    --head->listSize;
-    omp_unset_lock(head->lock);
-    // Unlock the previous node.
     omp_unset_lock(prev->lock);
 }
+
 
 /**
  * Find the given value in the linked list.
@@ -97,6 +112,9 @@ void remove_val(node_t *head, int val) {
  * @return 1 if the value is found, 0 otherwise.
  */
 int find_val(node_t *head, int val) {
+    if(!head)
+        return 0;
+    //    printf("Finding %d\n", val);
     node_t *current = head;
     // Iterate through the linked list.
     while (current != NULL) {
@@ -117,6 +135,17 @@ int find_val(node_t *head, int val) {
  * @return The length of the linked list as int.
  */
 int get_len(node_t *head) {
+//    int length = 0;
+//    node_t *current = head->next;
+//
+//    // Traverse the linked list and count the nodes
+//    while (current != NULL) {
+//        #pragma omp atomic
+//        length++; // increment length atomically to ensure thread safety
+//
+//        current = current->next;
+//    }
+//    return length;
     return head->listSize;
 }
 
@@ -125,6 +154,7 @@ int get_len(node_t *head) {
  * @param head The head node of the linked list.
  */
 void free_list(node_t *head) {
+    //    printf("Freeing list\n");
     // Iterate through the linked list and free the memory of each node.
     node_t *current = head;
     node_t *next;
@@ -140,6 +170,6 @@ void free_list(node_t *head) {
         // Move to the next node.
         current = next;
     }
-    // Set the head to NULL.
-    head = NULL;
 }
+
+
