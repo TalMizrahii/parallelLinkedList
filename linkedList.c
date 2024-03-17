@@ -118,3 +118,27 @@ int find_val(node_t *head, int val) {
 int get_len(node_t *head) {
     return head->listSize;
 }
+
+/**
+ * Free the memory of the linked list.
+ * @param head The head node of the linked list.
+ */
+void free_list(node_t *head) {
+    // Iterate through the linked list and free the memory of each node.
+    node_t *current = head;
+    node_t *next;
+    // Free the memory of each node.
+    while (current != NULL) {
+        // Move to the next node.
+        next = current->next;
+        // Free the memory of the current node.
+        omp_destroy_lock(current->lock);
+        free(current->lock);
+        current->lock = NULL;
+        free(current);
+        // Move to the next node.
+        current = next;
+    }
+    // Set the head to NULL.
+    head = NULL;
+}
