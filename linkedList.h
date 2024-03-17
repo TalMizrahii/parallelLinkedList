@@ -1,7 +1,17 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
-typedef struct node_s node_t;
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include "omp.h"
+
+typedef struct node_s {
+    int value;
+    unsigned int size;
+    struct node_s *next;
+    omp_lock_t *lock;
+} node_t;
 
 node_t *init_list(void);
 void sorted_insert(node_t *head, int val);
