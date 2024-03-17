@@ -8,7 +8,7 @@
 
 typedef struct node_s {
     int value;
-    unsigned int size;
+    int listSize;
     struct node_s *next;
     omp_lock_t *lock;
 } node_t;

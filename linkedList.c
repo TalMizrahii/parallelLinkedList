@@ -50,5 +50,71 @@ void sorted_insert(node_t *head, int val) {
     new_node->lock = malloc(sizeof(omp_lock_t));
     omp_init_lock(new_node->lock);
     prev->next = new_node;
+    omp_set_lock(head->lock);
+#pragma omp atomic
+    ++head->listSize;
+    omp_unset_lock(head->lock);
     omp_unset_lock(prev->lock);
+}
+
+void remove_val(node_t *head, int val) {
+    // Find the right place to insert.
+    node_t *ptr = head->next;
+    node_t *prev = head;
+
+    while (ptr != NULL && ptr->value != val) {
+        prev = ptr;
+        ptr = ptr->next;
+    }
+    // If the value is not in the list.
+    if (ptr == NULL) {
+        return;
+    }
+    // Lock the element that may be modified.
+    omp_set_lock(prev->lock);
+    // Modify the previous node to point to the next node.
+    prev->next = ptr->next;
+    // Free the memory of the removed node.
+    omp_destroy_lock(ptr->lock);
+    free(ptr->lock);
+    ptr->lock = NULL;
+    free(ptr);
+    ptr = NULL;
+    // Decrease the list size.
+    omp_set_lock(head->lock);
+#pragma omp atomic
+    --head->listSize;
+    omp_unset_lock(head->lock);
+    // Unlock the previous node.
+    omp_unset_lock(prev->lock);
+}
+
+/**
+ * Find the given value in the linked list.
+ * @param head The head node of the linked list.
+ * @param val The value to find in the linked list.
+ * @return 1 if the value is found, 0 otherwise.
+ */
+int find_val(node_t *head, int val) {
+    node_t *current = head;
+    // Iterate through the linked list.
+    while (current != NULL) {
+        // Check if the current node's value matches the target value.
+        if (current->value == val) {
+            return 1;
+        }
+        // Move to the next node.
+        current = current->next;
+    }
+    // The value was not found in the linked list.
+    return 0;
+}
+
+/**
+ * Return the length of the linked list.
+ * @param head The head node of the linked list.
+ * @return The length of the linked list as int.
+ */
+int get_len(node_t *head) {
+    return head->listSize;
 }
