@@ -9,6 +9,7 @@ node_t *init_list(void) {
     head->next = NULL;
     head->value = INT_MIN;
     head->lock = malloc(sizeof(omp_lock_t));
+    head->listSize = 1;
     omp_init_lock(head->lock);
     return head;
 }
