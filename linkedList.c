@@ -92,11 +92,11 @@ void remove_val(node_t *head, int val) {
     omp_set_lock(prev->lock);
     node_t *ptr = head->next;
     // Traverse the linked list to find the node with the given value.
-    while (ptr != NULL && ptr->value != val) {
+    while (ptr != NULL) {
         // Lock the current node.
         omp_set_lock(ptr->lock);
         // If the current node's value matches the target value, remove the node.
-        if (ptr->value == val) {
+        if (val == ptr->value) {
             // Remove the node.
             prev->next = ptr->next;
             omp_unset_lock(ptr->lock);
@@ -152,7 +152,7 @@ int get_len(node_t *head) {
     if (!head)
         return 0;
     // Iterate through the linked list and count the number of nodes.
-    int length = 0;
+    int length = 1;
     node_t *current = head->next;
     while (current != NULL) {
         // Increment the length.
