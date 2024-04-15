@@ -1,6 +1,6 @@
 <h1 align="center">
   
-  ![python-logo-glassy](https://user-images.githubusercontent.com/103560553/204082228-92a30920-ca99-4517-9b9d-c3ab44d42a0b.png)
+![8496952](https://github.com/TalMizrahii/parallelLinkedList/assets/103560553/501dc4f5-570a-4b61-952a-477884518fce)
 
   Parallel Linked List
   <br>
@@ -53,13 +53,16 @@ To install and run the program you use [Git](https://git-scm.com). From your com
 
 ```bash
 # Clone this repository.
-$ git clone https://github.com/TalMizrahii/MusicBrains-WebCralwer
+$ git clone https://github.com/TalMizrahii/parallelLinkedList
 
 # Navigate to the repository directory:
-$ cd MusicBrains-WebCrawler
+$ cd parallelLinkedList
 
-# Run the program
-$ python musicrawl.py
+# Compile the program
+$ make
+
+# run the program
+$ make run
 ```
 ## Author
 
